@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mole-Cha Lab</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', 'Sarabun', sans-serif; }
+html, body { overflow-x: hidden; }
+body {
+  background: linear-gradient(135deg, #ffe8d6 0%, #ffd7c4 50%, #ffc3a0 100%);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 15px;
+  position: relative;
+}
+.floating-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
+.floater { position: absolute; font-size: 2.5em; opacity: 0.35; animation: floatBob 4s ease-in-out infinite; }
+@keyframes floatBob { 0%, 100% { transform: translateY(0) rotate(-5deg); } 50% { transform: translateY(-30px) rotate(5deg); } }
+@keyframes floatBob2 { 0%, 100% { transform: translateY(0) rotate(5deg) scale(1); } 50% { transform: translateY(-40px) rotate(-5deg) scale(1.1); } }
+.game-container { background: #fffaf3; border-radius: 30px; box-shadow: 0 20px 60px rgba(180, 100, 60, 0.3), 0 0 0 6px #f4a987; max-width: 900px; width: 100%; overflow: hidden; position: relative; z-index: 1; }
+.header { background: linear-gradient(135deg, #ff9a8b 0%, #ff6a88 50%, #ff99ac 100%); padding: 25px; color: white; text-align: center; position: relative; overflow: hidden; }
+.header h1 { font-size: 1.9em; margin-bottom: 5px; text-shadow: 2px 2px 0 rgba(0,0,0,0.15); }
+.header p { opacity: 0.95; font-size: 0.95em; font-weight: 600; }
+.player-badge { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.25); padding: 5px 12px; border-radius: 20px; font-size: 0.85em; backdrop-filter: blur(5px); }
+.admin-link { position: absolute; top: 15px; left: 15px; background: rgba(255,255,255,0.25); padding: 5px 12px; border-radius: 20px; font-size: 0.85em; color: white; cursor: pointer; text-decoration: none; backdrop-filter: blur(5px); }
+.star-bar { background: #fff3e6; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px dashed #f4a987; }
+.star-display { font-size: 1.3em; font-weight: bold; color: #d97706; }
+.progress-bar { flex: 1; margin: 0 15px; background: #fde6c8; height: 12px; border-radius: 10px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, #ff9a8b, #ff6a88); transition: width 0.5s ease; width: 0%; }
+.content { padding: 25px; }
+.screen { display: none; animation: fadeIn 0.5s ease; }
+.screen.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.register-screen { text-align: center; padding: 20px 10px; }
+.register-icon { font-size: 6em; margin-bottom: 10px; animation: bounce 2s infinite; }
+@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+.register-screen h2 { color: #c026d3; font-size: 1.8em; margin-bottom: 10px; }
+.register-screen p { color: #666; line-height: 1.7; margin-bottom: 20px; }
+.register-form { background: #fff3e6; padding: 25px; border-radius: 20px; margin: 20px 0; border: 2px dashed #f4a987; }
+.register-form label { display: block; color: #c026d3; font-weight: bold; margin-bottom: 10px; font-size: 1.1em; }
+.register-form input { width: 100%; padding: 15px; font-size: 1.2em; border: 3px solid #f4a987; border-radius: 15px; text-align: center; background: white; color: #c026d3; font-weight: bold; outline: none; }
+.avatar-select { display: flex; justify-content: center; gap: 10px; margin: 15px 0; flex-wrap: wrap; }
+.avatar { font-size: 2.5em; padding: 10px; background: white; border: 3px solid #f4a987; border-radius: 50%; cursor: pointer; transition: all 0.2s; width: 65px; height: 65px; display: flex; align-items: center; justify-content: center; }
+.avatar:hover { transform: scale(1.1); }
+.avatar.selected { border-color: #c026d3; background: #fae8ff; transform: scale(1.15); }
+.btn { background: linear-gradient(135deg, #ff9a8b 0%, #ff6a88 100%); color: white; border: none; padding: 15px 40px; font-size: 1.1em; border-radius: 50px; cursor: pointer; font-weight: bold; box-shadow: 0 8px 20px rgba(255, 106, 136, 0.4); transition: all 0.3s; display: inline-block; margin: 10px 5px; }
+.btn:hover { transform: translateY(-3px); }
+.btn-secondary { background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); }
+.btn-success { background: linear-gradient(135deg, #10b981, #059669); }
+.btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); }
+.btn-small { padding: 10px 20px; font-size: 0.95em; }
+.story-screen { text-align: center; padding: 20px 10px; }
+.story-scene { font-size: 5em; margin: 15px 0; animation: scenePop 0.8s ease; }
+@keyframes scenePop { 0% { transform: scale(0) rotate(-180deg); opacity: 0; } 100% { transform: scale(1) rotate(0); opacity: 1; } }
+.story-title { color: #c026d3; font-size: 1.5em; margin-bottom: 15px; }
+.story-box { background: linear-gradient(135deg, #fff3e6, #ffe8d6); padding: 25px; border-radius: 20px; margin: 20px 0; line-height: 1.9; color: #5c3a2e; font-size: 1.05em; text-align: left; border-left: 6px solid #ff6a88; position: relative; }
+.story-speaker { display: inline-block; background: #c026d3; color: white; padding: 3px 12px; border-radius: 15px; font-size: 0.85em; margin-bottom: 10px; font-weight: bold; }
+.menu-card { background: linear-gradient(135deg, #fff3e6, #ffe8d6); border-radius: 20px; padding: 18px; margin-bottom: 15px; border: 2px solid #f4a987; }
+.menu-title { color: #c026d3; font-size: 1.25em; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.menu-type { display: inline-block; background: #ff6a88; color: white; padding: 3px 12px; border-radius: 15px; font-size: 0.7em; }
+.menu-goal { background: #fef3c7; padding: 10px 15px; border-radius: 10px; font-size: 0.9em; color: #92400e; border-left: 3px solid #f59e0b; }
+.question { background: white; padding: 18px; border-radius: 15px; line-height: 1.8; color: #444; font-size: 1em; margin-bottom: 18px; border: 2px solid #fde6c8; }
+.slider-game { background: linear-gradient(135deg, #fff3e6, #ffd7c4); border-radius: 20px; padding: 25px; text-align: center; border: 3px solid #f4a987; }
+.scale-display { background: linear-gradient(135deg, #3d2817, #1a0f08); color: #00ff88; font-family: 'Courier New', monospace; font-size: 3em; font-weight: bold; padding: 20px; border-radius: 15px; margin: 15px 0; border: 4px solid #8b5a3c; text-shadow: 0 0 15px #00ff88; }
+.scale-display small { font-size: 0.5em; color: #ffd700; }
+.slider-container { margin: 20px 0; }
+.slider { width: 100%; height: 18px; -webkit-appearance: none; background: linear-gradient(90deg, #ffc3a0, #ff9a8b, #ff6a88); border-radius: 10px; outline: none; }
+.slider::-webkit-slider-thumb { -webkit-appearance: none; width: 35px; height: 35px; background: #c026d3; border-radius: 50%; cursor: pointer; border: 4px solid white; }
+.slider-hint { display: flex; justify-content: space-between; color: #8b5a3c; font-size: 0.85em; margin-top: 5px; }
+.crafting-game { background: linear-gradient(135deg, #fae8ff, #f5d0fe); border-radius: 20px; padding: 20px; border: 3px solid #c084fc; }
+.crafting-area { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 15px 0; }
+.atom-tank { background: white; border-radius: 15px; padding: 15px; text-align: center; border: 3px solid transparent; }
+.atom-tank.C { border-color: #666; }
+.atom-tank.H { border-color: #60a5fa; }
+.atom-tank.O { border-color: #ef4444; }
+.atom-symbol { font-size: 2.5em; font-weight: bold; }
+.atom-tank.C .atom-symbol { color: #555; }
+.atom-tank.H .atom-symbol { color: #3b82f6; }
+.atom-tank.O .atom-symbol { color: #dc2626; }
+.atom-controls { display: flex; justify-content: center; gap: 10px; margin-top: 8px; }
+.atom-btn { width: 40px; height: 40px; border-radius: 50%; border: none; font-size: 1.3em; font-weight: bold; cursor: pointer; background: #ff6a88; color: white; }
+.atom-btn:hover { transform: scale(1.15); }
+.atom-btn.plus { background: #10b981; }
+.atom-count { font-size: 2em; font-weight: bold; color: #c026d3; margin: 5px 0; }
+.formula-display { background: linear-gradient(135deg, #3d2817, #1a0f08); color: #00ff88; padding: 15px; border-radius: 12px; font-family: 'Courier New', monospace; font-size: 1.8em; text-align: center; margin: 15px 0; border: 3px solid #8b5a3c; min-height: 60px; display: flex; align-items: center; justify-content: center; }
+.formula-display sub { font-size: 0.7em; }
+.sorting-game { background: linear-gradient(135deg, #fef3c7, #fde68a); border-radius: 20px; padding: 20px; border: 3px solid #f59e0b; }
+.conveyor { background: repeating-linear-gradient(90deg, #8b5a3c 0px, #8b5a3c 20px, #a0785a 20px, #a0785a 40px); padding: 15px; border-radius: 12px; margin: 15px 0; min-height: 100px; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.box { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #5c3a2e; padding: 12px; border-radius: 12px; text-align: center; cursor: pointer; border: 3px solid #8b5a3c; transition: all 0.3s; font-size: 0.88em; }
+.box:hover { transform: translateY(-5px) scale(1.03); }
+.box.selected { background: linear-gradient(135deg, #c026d3, #ff6a88); color: white; border-color: white; }
+.box.correct-box { background: linear-gradient(135deg, #10b981, #34d399); color: white; }
+.box.wrong-box { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+.box-label { font-weight: bold; margin-bottom: 5px; font-size: 1.1em; }
+.box-info { font-size: 0.88em; line-height: 1.4; }
+.drop-zone { background: rgba(255, 255, 255, 0.7); border: 3px dashed #c026d3; border-radius: 12px; padding: 15px; text-align: center; margin-top: 15px; color: #c026d3; min-height: 60px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+.password-game { background: linear-gradient(135deg, #fecaca, #fca5a5); border-radius: 20px; padding: 25px; text-align: center; border: 3px solid #ef4444; position: relative; overflow: hidden; }
+.safe-display { background: linear-gradient(135deg, #3d2817, #1a0f08); color: #ef4444; font-family: 'Courier New', monospace; font-size: 4em; font-weight: bold; padding: 25px; border-radius: 15px; margin: 25px 0 15px; border: 4px solid #8b5a3c; min-height: 100px; display: flex; align-items: center; justify-content: center; letter-spacing: 15px; }
+.keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 300px; margin: 0 auto; }
+.key { background: linear-gradient(135deg, #fff, #fde6c8); color: #5c3a2e; border: 3px solid #8b5a3c; padding: 18px; font-size: 1.5em; font-weight: bold; border-radius: 12px; cursor: pointer; }
+.key:hover { transform: translateY(-2px); }
+.key.action { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+.key.enter { background: linear-gradient(135deg, #10b981, #059669); color: white; grid-column: span 2; }
+.feedback { margin-top: 20px; padding: 18px; border-radius: 15px; display: none; }
+.feedback.show { display: block; }
+.feedback.correct { background: #d1fae5; border-left: 6px solid #10b981; }
+.feedback.wrong { background: #fee2e2; border-left: 6px solid #ef4444; }
+.feedback h3 { margin-bottom: 10px; font-size: 1.15em; }
+.feedback.correct h3 { color: #065f46; }
+.feedback.wrong h3 { color: #991b1b; }
+.feedback .solution { background: rgba(255,255,255,0.7); padding: 12px; border-radius: 10px; margin-top: 10px; font-size: 0.9em; line-height: 1.7; color: #5c3a2e; }
+.result-screen { text-align: center; padding: 15px; }
+.result-icon { font-size: 5em; margin-bottom: 10px; animation: bounce 1s infinite; }
+.result-title { font-size: 1.8em; margin-bottom: 12px; color: #c026d3; }
+.result-stars { font-size: 2.3em; margin: 12px 0; letter-spacing: 5px; }
+.result-message { background: #fff3e6; padding: 18px; border-radius: 15px; line-height: 1.7; margin: 15px 0; font-size: 1em; border: 2px solid #f4a987; }
+.result-summary { background: #fef3c7; padding: 15px; border-radius: 12px; margin: 15px 0; text-align: left; font-size: 0.92em; }
+.result-summary div { padding: 6px 0; border-bottom: 1px dashed #f4a987; }
+.scratch-toggle { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #c026d3, #ff6a88); color: white; border: none; font-size: 1.8em; cursor: pointer; box-shadow: 0 5px 20px rgba(192, 38, 211, 0.5); z-index: 100; }
+.scratch-pad { position: fixed; bottom: 90px; right: 20px; width: 360px; max-width: 92vw; height: 480px; background: #fffaf3; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.3); border: 3px solid #c026d3; z-index: 99; display: none; flex-direction: column; overflow: hidden; }
+.scratch-pad.open { display: flex; }
+.scratch-header { background: linear-gradient(135deg, #c026d3, #ff6a88); color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 0.9em; flex-shrink: 0; }
+.scratch-pad canvas { display: block; width: 100%; flex: 1; background: white; cursor: crosshair; touch-action: none; -webkit-user-select: none; user-select: none; }
+.scratch-tools { padding: 8px; background: #fff3e6; display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; border-top: 2px dashed #f4a987; align-items: center; flex-shrink: 0; }
+.scratch-tools button { padding: 6px 12px; border: none; border-radius: 15px; background: #ff6a88; color: white; cursor: pointer; font-size: 0.82em; font-weight: bold; }
+.scratch-tools button:hover { background: #c026d3; }
+.scratch-tools button.active { background: #c026d3; }
+.color-btn { width: 28px; height: 28px; border-radius: 50%; padding: 0; border: 3px solid white; }
+.color-btn.active { border-color: #c026d3; transform: scale(1.15); }
+.music-toggle { position: fixed; top: 20px; right: 20px; width: 50px; height: 50px; border-radius: 50%; background: white; border: 3px solid #ff6a88; font-size: 1.5em; cursor: pointer; z-index: 100; }
+.admin-screen { padding: 20px; }
+.admin-header { background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; padding: 25px; border-radius: 20px; margin-bottom: 20px; text-align: center; }
+.admin-header h2 { font-size: 1.8em; margin-bottom: 8px; }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; }
+.stat-card { background: white; padding: 20px; border-radius: 15px; text-align: center; border: 3px solid #f4a987; }
+.stat-value { font-size: 2.5em; font-weight: bold; color: #c026d3; margin-bottom: 5px; }
+.stat-label { color: #8b5a3c; font-size: 0.9em; font-weight: 600; }
+.admin-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; justify-content: center; }
+.score-table { background: white; border-radius: 15px; overflow: hidden; margin-bottom: 20px; }
+.score-table table { width: 100%; border-collapse: collapse; }
+.score-table th { background: linear-gradient(135deg, #ff9a8b, #ff6a88); color: white; padding: 12px; text-align: left; font-size: 0.95em; }
+.score-table td { padding: 12px; border-bottom: 1px solid #fde6c8; font-size: 0.9em; }
+.score-table .rank-1 { background: linear-gradient(90deg, #fef3c7, #fff); }
+.score-table .rank-2 { background: linear-gradient(90deg, #f3f4f6, #fff); }
+.score-table .rank-3 { background: linear-gradient(90deg, #fed7aa, #fff); }
+.chart-container { background: white; padding: 20px; border-radius: 15px; margin-bottom: 20px; }
+.chart-title { color: #c026d3; font-weight: bold; margin-bottom: 15px; text-align: center; }
+.bar-chart { display: flex; align-items: flex-end; justify-content: space-around; height: 200px; gap: 10px; padding: 10px; border-bottom: 2px solid #f4a987; }
+.bar { flex: 1; background: linear-gradient(180deg, #ff9a8b, #ff6a88); border-radius: 10px 10px 0 0; position: relative; min-height: 20px; display: flex; align-items: flex-start; justify-content: center; padding-top: 8px; color: white; font-weight: bold; }
+.bar-label { position: absolute; bottom: -25px; left: 0; right: 0; text-align: center; color: #8b5a3c; font-size: 0.9em; font-weight: bold; }
+.empty-state { text-align: center; padding: 40px; color: #8b5a3c; }
+.empty-state .icon { font-size: 4em; margin-bottom: 15px; opacity: 0.5; }
+.admin-login { max-width: 400px; margin: 40px auto; background: white; padding: 30px; border-radius: 20px; border: 3px solid #3b82f6; text-align: center; }
+.admin-login h2 { color: #1e3a8a; margin-bottom: 20px; }
+.admin-login input { width: 100%; padding: 12px; border: 3px solid #3b82f6; border-radius: 10px; margin-bottom: 15px; font-size: 1em; outline: none; }
+.detail-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; }
+.detail-modal.show { display: flex; }
+.detail-content { background: white; border-radius: 20px; padding: 25px; max-width: 500px; width: 100%; max-height: 85vh; overflow-y: auto; }
+.detail-content h3 { color: #c026d3; margin-bottom: 15px; text-align: center; }
+.detail-item { padding: 10px; border-bottom: 1px dashed #f4a987; display: flex; justify-content: space-between; align-items: center; }
+.detail-item:last-child { border-bottom: none; }
+@media (max-width: 600px) {
+  .header h1 { font-size: 1.4em; }
+  .content { padding: 15px; }
+  .scale-display { font-size: 2em; }
+  .crafting-area { grid-template-columns: 1fr; }
+  .atom-symbol { font-size: 2em; }
+  .formula-display { font-size: 1.3em; }
+  .safe-display { font-size: 2.5em; letter-spacing: 10px; }
+  .key { padding: 14px; font-size: 1.2em; }
+  .conveyor { grid-template-columns: repeat(2, 1fr); }
+  .scratch-pad { width: 92vw; right: 4vw; bottom: 85px; height: 450px; }
+  .player-badge, .admin-link { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="floating-bg" id="floatingBg"></div>
+<button class="music-toggle" id="musicToggle" onclick="toggleMusic()">🎵</button>
+<button class="scratch-toggle" onclick="toggleScratch()">📝</button>
+<div class="scratch-pad" id="scratchPad">
+  <div class="scratch-header"><span>📝 กระดาษทด</span><span>✏️ วาดได้จริง</span></div>
+  <canvas id="scratchCanvas"></canvas>
+  <div class="scratch-tools">
+    <button onclick="clearCanvas()">🗑️ ล้าง</button>
+    <button onclick="setPenColor('#000000')" class="color-btn active" style="background:#000;" id="colorBlack"></button>
+    <button onclick="setPenColor('#ef4444')" class="color-btn" style="background:#ef4444;" id="colorRed"></button>
+    <button onclick="setPenColor('#3b82f6')" class="color-btn" style="background:#3b82f6;" id="colorBlue"></button>
+    <button onclick="setPenColor('#10b981')" class="color-btn" style="background:#10b981;" id="colorGreen"></button>
+    <button onclick="setPenSize(2)" id="sizeSmall">เล็ก</button>
+    <button onclick="setPenSize(5)" id="sizeMedium" class="active">กลาง</button>
+    <button onclick="setPenSize(10)" id="sizeLarge">ใหญ่</button>
+  </div>
+</div>
+<div class="detail-modal" id="detailModal">
+  <div class="detail-content">
+    <h3 id="detailTitle">📊 รายละเอียด</h3>
+    <div id="detailBody"></div>
+    <div style="text-align:center; margin-top:20px;">
+      <button class="btn btn-secondary btn-small" onclick="closeDetail()">ปิด</button>
+    </div>
+  </div>
+</div>
+<div class="game-container">
+  <div class="header">
+    <h1>🧪 Mole-Cha Lab 🧋</h1>
+    <p>โมลชา แล็บ · ห้องทดลองชานมสูตรโมลาร์</p>
+    <a class="admin-link" onclick="showAdminLogin()">🔐 ครูผู้สอน</a>
+    <div class="player-badge" id="playerBadge" style="display:none;">👤 <span id="playerNameDisplay"></span></div>
+  </div>
+  <div class="star-bar" id="starBar" style="display:none;">
+    <div class="star-display">⭐ <span id="starCount">0</span>/6</div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div id="menuProgress" style="color:#c026d3; font-weight:bold;">ด่าน 0/6</div>
+  </div>
+  <div class="content">
+    <div class="screen active" id="registerScreen">
+      <div class="register-screen">
+        <div class="register-icon">🧪🧋</div>
+        <h2>ยินดีต้อนรับสู่ Mole-Cha Lab!</h2>
+        <p>ห้องทดลองชานมสูตรโมลาร์ · ก่อนเริ่มทดลอง กรุณาลงทะเบียน</p>
+        <div class="register-form">
+          <label>🏷️ ชื่อ-สกุล / เลขที่</label>
+          <input type="text" id="playerName" placeholder="เช่น ด.ช.สมชาย ใจดี ม.4/2 เลขที่ 12" maxlength="50">
+          <label style="margin-top:20px;">🎭 เลือกคาแรคเตอร์นักทดลอง</label>
+          <div class="avatar-select" id="avatarSelect">
+            <div class="avatar selected" data-avatar="👨‍🔬">👨‍🔬</div>
+            <div class="avatar" data-avatar="👩‍🔬">👩‍🔬</div>
+            <div class="avatar" data-avatar="🧑‍🍳">🧑‍🍳</div>
+            <div class="avatar" data-avatar="🦸">🦸</div>
+            <div class="avatar" data-avatar="🧙">🧙</div>
+            <div class="avatar" data-avatar="🐻">🐻</div>
+          </div>
+        </div>
+        <button class="btn" onclick="confirmRegister()">✨ เริ่มการทดลอง!</button>
+      </div>
+    </div>
+    <div class="screen" id="storyScreen">
+      <div class="story-screen">
+        <div class="story-scene" id="storyScene">🌅</div>
+        <h2 class="story-title" id="storyTitle"></h2>
+        <div class="story-box">
+          <div class="story-speaker" id="storySpeaker"></div>
+          <div id="storyContent"></div>
+        </div>
+        <button class="btn" onclick="startMission()">🚀 รับภารกิจ!</button>
+      </div>
+    </div>
+    <div class="screen" id="questionScreen">
+      <div class="menu-card">
+        <div class="menu-title" id="menuTitle"></div>
+        <div class="menu-goal" id="menuGoal"></div>
+      </div>
+      <div class="question" id="questionText"></div>
+      <div id="gameArea"></div>
+      <div class="feedback" id="feedbackBox">
+        <h3 id="feedbackTitle"></h3>
+        <div id="feedbackMessage"></div>
+        <div class="solution" id="feedbackSolution"></div>
+        <button class="btn" id="nextBtn" onclick="nextQuestion()">ด่านถัดไป ➡️</button>
+      </div>
+    </div>
+    <div class="screen" id="resultScreen">
+      <div class="result-screen">
+        <div class="result-icon" id="resultIcon">🎉</div>
+        <h1 class="result-title" id="resultTitle"></h1>
+        <div class="result-stars" id="resultStars"></div>
+        <div class="result-message" id="resultMessage"></div>
+        <div class="result-summary" id="resultSummary"></div>
+        <button class="btn" onclick="restartGame()">🔄 เล่นอีกครั้ง</button>
+      </div>
+    </div>
+    <div class="screen" id="adminLoginScreen">
+      <div class="admin-login">
+        <h2>🔐 เข้าสู่ระบบครูผู้สอน</h2>
+        <p style="color:#666; margin-bottom:20px;">กรุณากรอกรหัสผ่านเพื่อดูคะแนนนักเรียน</p>
+        <input type="password" id="adminPassword" placeholder="รหัสผ่าน" onkeypress="if(event.key==='Enter')loginAdmin()">
+        <button class="btn" onclick="loginAdmin()">🔓 เข้าสู่ระบบ</button>
+        <button class="btn btn-secondary btn-small" onclick="backToGame()" style="margin-top:10px;">← กลับสู่เกม</button>
+        <p style="color:#999; font-size:0.85em; margin-top:15px;">💡 รหัสผ่านเริ่มต้น: <b>teacher123</b></p>
+      </div>
+    </div>
+    <div class="screen" id="adminScreen">
+      <div class="admin-screen">
+        <div class="admin-header">
+          <h2>📊 แดชบอร์ดครูผู้สอน</h2>
+          <p>Mole-Cha Lab · ระบบบันทึกคะแนนนักเรียน</p>
+        </div>
+        <div class="stats-grid" id="statsGrid"></div>
+        <div class="admin-actions">
+          <button class="btn btn-success btn-small" onclick="exportCSV()">📥 Export CSV</button>
+          <button class="btn btn-secondary btn-small" onclick="refreshAdmin()">🔄 รีเฟรช</button>
+          <button class="btn btn-danger btn-small" onclick="clearAllScores()">🗑️ ล้างข้อมูลทั้งหมด</button>
+          <button class="btn btn-small" onclick="changePassword()">🔑 เปลี่ยนรหัส</button>
+          <button class="btn btn-secondary btn-small" onclick="backToGame()">← กลับสู่เกม</button>
+        </div>
+        <div class="chart-container">
+          <div class="chart-title">📈 การกระจายคะแนน</div>
+          <div class="bar-chart" id="barChart"></div>
+          <div style="height:30px;"></div>
+        </div>
+        <div class="score-table" id="scoreTableContainer"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+// ===== URL ของ Google Apps Script =====
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwuwDnFaxx0DPuNHE2JtRmnRi2pu4yFrJcBviO1c05MCEEeFOMbLCpo6kdAUQlPfT_WNA/exec';
+
+const stories = [
+  { scene: "🌅🧪", title: "เช้าวันแรกที่ Mole-Cha Lab", speaker: "หัวหน้าห้องทดลอง", content: "ยินดีต้อนรับสู่ <b>'Mole-Cha Lab'</b> ห้องทดลองชานมสูตรโมลาร์แห่งแรกในโลก! วันนี้คุณจะได้รับตำแหน่ง <b>'นักทดลองหลัก'</b> หน้าที่ของคุณคือคิดค้นเมนูเด็ดทั้ง 6 เมนู โดยใช้ความรู้เรื่อง <b>'โมล'</b> ในการคำนวณวัตถุดิบให้แม่นยำ มิฉะนั้น... เมนูอาจพังพินาศ! พร้อมหรือยัง?" },
+  { scene: "🔥💨", title: "เหตุการณ์ฉุกเฉิน! แก๊สรั่ว", speaker: "ช่างเทคนิค", content: "<b>'หัวหน้าครับ! ช่วยด้วย!'</b> ช่างเทคนิควิ่งหน้าตื่นเข้ามา <b>'ถังแก๊สไนโตรเจนสำหรับทำฟองครีมบนชานมพ่นไฟรั่วซึม!'</b> แก๊สรั่วออกไปเยอะมาก เราต้องรีบคำนวณน้ำหนักแก๊สที่สูญเสียเพื่อ<b>เคลมประกันภัย</b>! ช่วยคำนวณให้หน่อยว่าแก๊สที่หายไปหนักกี่กรัม?" },
+  { scene: "🍋💥", title: "เครื่องอัดแก๊สพัง!", speaker: "พนักงานบาร์", content: "<b>'หัวหน้าค่ะ!'</b> พนักงานบาร์ร้องเรียก <b>'เครื่องอัดแก๊สอัตโนมัติสำหรับชามะนาวโซดาพังค่ะ!'</b> ตอนนี้เราต้องใช้น้ำแข็งแห้ง (CO₂ ของแข็ง) แทน แต่ต้องชั่งให้<b>พอดีเป๊ะ</b>ไม่งั้นถังจะระเบิดหรือชาจะไม่ซ่าเลย! ลูกค้ารออยู่ 10 คน ช่วยคำนวณน้ำหนักน้ำแข็งแห้งที่ต้องใช้ให้หน่อย!" },
+  { scene: "🚚📦", title: "รถส่งของมาถึง!", speaker: "คนขับรถส่งของ", content: "<b>'สวัสดีครับ! ส่งน้ำตาลทรายให้ Mole-Cha Lab ครับ'</b> คนขับรถส่งของพูดพร้อมชี้ไปที่กล่อง 4 กล่องบนสายพาน <b>'แต่ผมได้ยินมาว่ามีซัพพลายเออร์บางเจ้าเอาน้ำตาลปลอมมาปนด้วย'</b> คุณต้อง<b>ตรวจสอบ</b>โดยดูจากสัดส่วนคาร์บอน น้ำตาลแท้ต้องมีคาร์บอน <b>42.1% โดยมวล</b> เลือกกล่องที่ถูกต้องเข้าคลังก่อนที่ของจะเสีย!" },
+  { scene: "✈️🍵", title: "พัสดุพิเศษจากญี่ปุ่น", speaker: "ซัพพลายเออร์ญี่ปุ่น", content: "<b>'คอนนิจิวะ!'</b> ซัพพลายเออร์จากญี่ปุ่นส่งผงเร่งความหอมสำหรับชาเขียวมัทฉะมาให้ แต่<b>ฉลากสูตรเคมีเลือนหายไปหมดแล้ว!</b> เหลือเพียงข้อมูลอัตราส่วนโดยมวล: คาร์บอน 60 กรัม, ไฮโดรเจน 8 กรัม, ออกซิเจน 32 กรัม คุณต้อง<b>คราฟต์สูตรเอมพิริกัล</b>เพื่อตรวจสอบความปลอดภัยก่อนใช้ ผงนี้ปลอดภัยไหม?" },
+  { scene: "⚠️🔧", title: "หม้อต้มขัดข้อง!", speaker: "ช่างซ่อม", content: "<b>'แย่แล้วครับหัวหน้า!'</b> ช่างซ่อมตะโกน <b>'หม้อต้มชานมเผือกมีคราบตะกรันเกาะเต็มไปหมด ระบบล็อกไม่ยอมให้ฉีดน้ำยาล้างเพราะไม่รู้จักสูตรสาร!'</b> เราต้องป้อน<b>รหัสตัวคูณ x</b>ของสูตรโมเลกุล (CaCO₃)ₓ ที่มีมวลโมเลกุล 300 ให้ระบบถึงจะทำงานได้ รีบปลดล็อกก่อนที่หม้อจะพังถาวร!" },
+  { scene: "🍊💊", title: "เมนูใหม่สุดฮิต!", speaker: "หัวหน้าคลังสินค้า", content: "<b>'หัวหน้าครับ!'</b> หัวหน้าคลังสินค้ารายงาน <b>'เมนูชาส้มวิตซีซูเปอร์เฟรชกำลังจะเป็นฮิต! แต่ผมงงกับระบบสต็อกครับ'</b> วิตามินซี 1 ซองมีออกซิเจนอยู่ 3 โมลอะตอม ผมต้อง<b>บันทึกน้ำหนัก</b>ในสต็อกกี่กรัมดี? ช่วยคำนวณให้หน่อย ลูกค้ารอซื้อเมนูนี้ตั้งหน้าร้านแล้ว!" }
+];
+const questions = [
+  { type: 'slider', menu: "⚗️ ด่านที่ 1: ชานมพ่นไฟ", typeLabel: "⚖️ SLIDER", goal: "🎯 เลื่อนตาชั่งให้ได้น้ำหนักแก๊ส N₂ ที่สูญเสียไปพอดี เพื่อเคลมประกันภัย", question: "ถังแก๊สไนโตรเจน (N₂) สำหรับทำฟองครีมรั่วไหลออกไป <b>1.204 × 10²⁴ โมเลกุล</b> จงคำนวณน้ำหนักแก๊สที่สูญเสีย (กรัม) แล้วเลื่อนสไลเดอร์ตาชั่งให้ตรงเป๊ะ! (N = 14)", target: 56, min: 0, max: 100, step: 0.5, unit: 'g', tooHigh: "💥 ถังระเบิด! แก๊สเกินพิกัด", tooLow: "😕 ครีมเหลว ไม่เป็นฟอง", correctMsg: "ได้รับแก๊สไนโตรเจนเกรดอาหาร ⭐️", solution: "📐 วิธีคิด:<br>• โมล = (1.204 × 10²⁴) ÷ (6.02 × 10²³) = <b>2 โมล</b><br>• M(N₂) = 14 × 2 = 28<br>• มวล = 2 × 28 = <b>56 กรัม</b>" },
+  { type: 'crafting', menu: "🍋 ด่านที่ 2: ชามะนาวโซดาซ่า", typeLabel: "🧩 CRAFTING", goal: "🎯 คราฟต์โมเลกุล CO₂ ให้ได้น้ำหนัก 11.0 กรัม เพื่ออัดความซ่าพอดี", question: "ต้องอัดแก๊ส CO₂ ปริมาตร 5.6 dm³ (STP) ลงในน้ำชา จงคราฟต์โมเลกุล CO₂ โดยปรับจำนวนอะตอม C และ O ให้ได้น้ำหนัก <b>11.0 กรัม</b> พอดี! (C=12, O=16)", targetWeight: 11.0, targetFormula: { C: 1, H: 0, O: 2 }, targetMoles: 0.25, tooHigh: "💥 แก๊สล้น ถังระเบิด!", tooLow: "😴 ชาไม่ซ่า จืดชืด", correctMsg: "ได้ชามะนาวโซดาซ่าสุดฟิน ⭐️", solution: "📐 วิธีคิด:<br>• โมล CO₂ = 5.6 ÷ 22.4 = <b>0.25 โมล</b><br>• M(CO₂) = 12 + 32 = 44<br>• มวล = 0.25 × 44 = <b>11.0 กรัม</b><br>• สูตร CO₂ = C 1 อะตอม + O 2 อะตอม" },
+  { type: 'sorting', menu: "🧋 ด่านที่ 3: ชานมไข่มุกออร์แกนิก", typeLabel: "📦 SORTING", goal: "🎯 ตรวจสอบคุณภาพน้ำตาลจากซัพพลายเออร์ 4 ราย โดยคำนวณหาสัดส่วนคาร์บอนในน้ำตาลซูโครส", question: "ร้านได้รับน้ำตาลจากซัพพลายเออร์ 4 ราย แต่มีเพียงรายเดียวที่ส่งน้ำตาลซูโครส (C₁₂H₂₂O₁₁) บริสุทธิ์จริง คุณต้องตรวจสอบคุณภาพโดยคำนวณหาสัดส่วนคาร์บอนที่ควรจะเป็น แล้วเลือกกล่องที่ถูกต้อง (H=1, C=12, O=16)", boxes: [ { label: "กล่อง A", info: "น้ำตาล 342 g<br><b>%C = 42.1%</b>", correct: true }, { label: "กล่อง B", info: "น้ำตาลผงบริสุทธิ์<br><b>%C = 100%</b>", correct: false }, { label: "กล่อง C", info: "น้ำตาลปลอม<br><b>%C = 12.0%</b>", correct: false }, { label: "กล่อง D", info: "น้ำตาลผสม<br><b>%C = 50.0%</b>", correct: false } ], correctMsg: "ได้น้ำตาลทรายแท้ หวานกลมกล่อม ⭐️", wrongMsg: "น้ำตาลปลอมปน! ลูกค้าบ่น", solution: "📐 วิธีคิด:<br>• M(C₁₂H₂₂O₁₁) = 144 + 22 + 176 = <b>342</b><br>• %C = (144 ÷ 342) × 100 ≈ <b>42.1%</b><br>✅ กล่อง A คือของแท้!" },
+  { type: 'crafting', menu: "🍵 ด่านที่ 4: ชาเขียวมัทฉะลาเต้", typeLabel: "🧩 CRAFTING", goal: "🎯 คราฟต์ผงมัทฉะสูตรเอมพิริกัล C₅H₈O₂ โดยปรับจำนวนอะตอมให้ถูกต้อง", question: "ผงเร่งความหอมมีอัตราส่วนโดยมวล: C 60 g, H 8 g, O 32 g จงคราฟต์สูตรเอมพิริกัลโดยปรับจำนวนอะตอม C, H, O ในหม้อให้ถูกต้อง! (C=12, H=1, O=16)", targetWeight: null, targetFormula: { C: 5, H: 8, O: 2 }, targetMoles: null, tooHigh: "🧪 กลิ่นเพี้ยน เป็นสารเคมี!", tooLow: "⚫ ชาเขียวกลายเป็นสีดำ", correctMsg: "ผงมัทฉะหอมฟุ้งระดับพรีเมียม ⭐️", solution: "📐 วิธีคิด:<br>• โมล C = 60 ÷ 12 = <b>5</b><br>• โมล H = 8 ÷ 1 = <b>8</b><br>• โมล O = 32 ÷ 16 = <b>2</b><br>• สูตรเอมพิริกัล = <b>C₅H₈O₂</b>" },
+  { type: 'password', menu: "🍠 ด่านที่ 5: ชานมเผือกหอม", typeLabel: "⌨️ PASSWORD", goal: "🎯 ป้อนค่า x ของสูตรโมเลกุล (CaCO₃)ₓ เพื่อปลดล็อกระบบล้างตะกรัน", question: "หม้อต้มมีคราบตะกรัน (CaCO₃)ₓ มวลโมเลกุลรวม = <b>300</b> จงป้อนค่า <b>x</b> (เลขจำนวนเต็ม) บนคีย์แพดเพื่อฉีดน้ำยาล้างคราบ! (Ca=40, C=12, O=16)", targetAnswer: "3", correctMsg: "ล้างคราบสะอาดเกลี้ยง หม้อกลับมาใช้งานได้ ⭐️", wrongMsg: "⚠️ รหัสผิด! ตะกรันยังเกาะแน่น", solution: "📐 วิธีคิด:<br>• M(CaCO₃) = 40 + 12 + 48 = <b>100</b><br>• 100x = 300<br>• x = <b>3</b><br>• สูตรโมเลกุล = Ca₃C₃O₉" },
+  { type: 'slider', menu: "🍊 ด่านที่ 6: ชาส้มวิตซีซูเปอร์เฟรช", typeLabel: "⚖️ SLIDER", goal: "🎯 เลื่อนตาชั่งชั่งวิตามินซี (C₆H₈O₆) ให้ได้น้ำหนักพอดี สำหรับ O 3 โมลอะตอม", question: "วิตามินซี 1 ซอง มีธาตุ O อยู่ <b>3 โมลอะตอม</b> จงคำนวณน้ำหนักวิตามินซี (กรัม) แล้วเลื่อนสไลเดอร์ตาชั่งให้ตรง! (H=1, C=12, O=16)", target: 88, min: 0, max: 200, step: 1, unit: 'g', tooHigh: "❌ ผงวิตามินไม่ละลาย ตกตะกอน!", tooLow: "😕 วิตามินน้อยไป รสจืดชืด", correctMsg: "ชาส้มเปรี้ยวหวานกลมกล่อม วิตามินซีเข้มข้น ⭐️", solution: "📐 วิธีคิด:<br>• C₆H₈O₆ 1 โมล มี O 6 โมลอะตอม<br>• มี O 3 โมลอะตอม → โมลโมเลกุล = 3 ÷ 6 = <b>0.5 โมล</b><br>• M(C₆H₈O₆) = 72 + 8 + 96 = <b>176</b><br>• มวล = 0.5 × 176 = <b>88 กรัม</b>" }
+];
+let playerName = '';
+let playerAvatar = '👨‍🔬';
+let currentQuestion = 0;
+let stars = 0;
+let answered = false;
+let results = [];
+let audioCtx = null;
+let musicPlaying = false;
+let musicInterval = null;
+let gameStartTime = null;
+const ADMIN_PASSWORD_KEY = 'molecha_admin_password';
+const SCORES_KEY = 'molecha_scores';
+const DEFAULT_PASSWORD = 'teacher123';
+function getAdminPassword() { return localStorage.getItem(ADMIN_PASSWORD_KEY) || DEFAULT_PASSWORD; }
+function setAdminPassword(pwd) { localStorage.setItem(ADMIN_PASSWORD_KEY, pwd); }
+function getScores() { try { return JSON.parse(localStorage.getItem(SCORES_KEY)) || []; } catch { return []; } }
+function saveScore(data) { const scores = getScores(); scores.push(data); localStorage.setItem(SCORES_KEY, JSON.stringify(scores)); }
+function clearAllScores() {
+  if (confirm('⚠️ คุณแน่ใจหรือไม่ว่าต้องการล้างข้อมูลคะแนนทั้งหมด?')) {
+    if (confirm('🔴 ยืนยันอีกครั้ง: ลบข้อมูลทั้งหมด?')) {
+      localStorage.removeItem(SCORES_KEY);
+      refreshAdmin();
+      alert('✅ ล้างข้อมูลเรียบร้อยแล้ว');
+    }
+  }
+}
+function changePassword() {
+  const oldPwd = prompt('กรอกรหัสผ่านเดิม:');
+  if (oldPwd === null) return;
+  if (oldPwd !== getAdminPassword()) { alert('❌ รหัสผ่านเดิมไม่ถูกต้อง'); return; }
+  const newPwd = prompt('กรอกรหัสผ่านใหม่ (อย่างน้อย 4 ตัวอักษร):');
+  if (newPwd === null || newPwd.length < 4) { alert('❌ รหัสผ่านต้องมีความยาวอย่างน้อย 4 ตัวอักษร'); return; }
+  const confirmPwd = prompt('ยืนยันรหัสผ่านใหม่:');
+  if (confirmPwd !== newPwd) { alert('❌ รหัสผ่านไม่ตรงกัน'); return; }
+  setAdminPassword(newPwd);
+  alert('✅ เปลี่ยนรหัสผ่านเรียบร้อยแล้ว');
+}
+function showAdminLogin() {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('adminLoginScreen').classList.add('active');
+  document.getElementById('starBar').style.display = 'none';
+  document.getElementById('adminPassword').value = '';
+  setTimeout(() => document.getElementById('adminPassword').focus(), 100);
+}
+function loginAdmin() {
+  const pwd = document.getElementById('adminPassword').value;
+  if (pwd === getAdminPassword()) { playSuccess(); showAdminDashboard(); }
+  else { playFail(); alert('❌ รหัสผ่านไม่ถูกต้อง'); document.getElementById('adminPassword').value = ''; document.getElementById('adminPassword').focus(); }
+}
+function backToGame() {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('registerScreen').classList.add('active');
+  document.getElementById('starBar').style.display = 'none';
+}
+function showAdminDashboard() {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('adminScreen').classList.add('active');
+  document.getElementById('starBar').style.display = 'none';
+  refreshAdmin();
+}
+function refreshAdmin() {
+  const scores = getScores();
+  renderStats(scores);
+  renderChart(scores);
+  renderTable(scores);
+}
+function renderStats(scores) {
+  const total = scores.length;
+  const avg = total > 0 ? (scores.reduce((s, x) => s + x.stars, 0) / total).toFixed(2) : 0;
+  const max = total > 0 ? Math.max(...scores.map(s => s.stars)) : 0;
+  const min = total > 0 ? Math.min(...scores.map(s => s.stars)) : 0;
+  const perfect = scores.filter(s => s.stars === 6).length;
+  const pass = scores.filter(s => s.stars >= 4).length;
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-card"><div class="stat-value">${total}</div><div class="stat-label">👥 นักเรียนทั้งหมด</div></div>
+    <div class="stat-card"><div class="stat-value">${avg}</div><div class="stat-label">📊 คะแนนเฉลี่ย</div></div>
+    <div class="stat-card"><div class="stat-value">${max}</div><div class="stat-label">🏆 คะแนนสูงสุด</div></div>
+    <div class="stat-card"><div class="stat-value">${min}</div><div class="stat-label">📉 คะแนนต่ำสุด</div></div>
+    <div class="stat-card"><div class="stat-value">${perfect}</div><div class="stat-label">⭐ เต็ม 6 ดาว</div></div>
+    <div class="stat-card"><div class="stat-value">${total > 0 ? Math.round(pass/total*100) : 0}%</div><div class="stat-label">✅ อัตราผ่าน (≥4 ดาว)</div></div>
+  `;
+}
+function renderChart(scores) {
+  const distribution = [0, 0, 0, 0, 0, 0, 0];
+  scores.forEach(s => distribution[s.stars]++);
+  const maxCount = Math.max(...distribution, 1);
+  let html = '';
+  for (let i = 0; i <= 6; i++) {
+    const height = (distribution[i] / maxCount) * 100;
+    const color = i === 6 ? 'linear-gradient(180deg, #fbbf24, #f59e0b)' : i >= 4 ? 'linear-gradient(180deg, #34d399, #10b981)' : 'linear-gradient(180deg, #fca5a5, #ef4444)';
+    html += `<div class="bar" style="height:${Math.max(height, 5)}%; background:${color};">${distribution[i]}<div class="bar-label">${i}⭐</div></div>`;
+  }
+  document.getElementById('barChart').innerHTML = html;
+}
+function renderTable(scores) {
+  if (scores.length === 0) {
+    document.getElementById('scoreTableContainer').innerHTML = `<div class="empty-state"><div class="icon">📭</div><h3 style="color:#8b5a3c;">ยังไม่มีข้อมูลนักเรียน</h3><p>เมื่อนักเรียนเล่นเกมเสร็จ คะแนนจะปรากฏที่นี่</p></div>`;
+    return;
+  }
+  const sorted = [...scores].sort((a, b) => { if (b.stars !== a.stars) return b.stars - a.stars; return new Date(a.timestamp) - new Date(b.timestamp); });
+  let rows = sorted.map((s, i) => {
+    const rank = i + 1;
+    const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : '';
+    const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+    const date = new Date(s.timestamp);
+    const dateStr = date.toLocaleDateString('th-TH') + ' ' + date.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
+    const starsStr = '⭐'.repeat(s.stars) + '☆'.repeat(6 - s.stars);
+    return `<tr class="${rankClass}"><td>${medal}</td><td>${s.avatar} ${escapeHtml(s.name)}</td><td class="stars-cell">${starsStr}</td><td><b>${s.stars}/6</b></td><td>${Math.round(s.stars/6*100)}%</td><td>${s.timeSpent || '-'} วินาที</td><td>${dateStr}</td><td><button class="btn btn-small btn-secondary" onclick="showDetail(${scores.indexOf(s)})">📊 ดู</button></td></tr>`;
+  }).join('');
+  document.getElementById('scoreTableContainer').innerHTML = `<table><thead><tr><th>ลำดับ</th><th>ชื่อ-สกุล</th><th>ดาว</th><th>คะแนน</th><th>%</th><th>เวลา</th><th>วันที่</th><th>รายละเอียด</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+function showDetail(idx) {
+  const scores = getScores();
+  const s = scores[idx];
+  if (!s) return;
+  let detailHTML = `
+    <div class="detail-item"><b>👤 ชื่อ:</b> <span>${s.avatar} ${escapeHtml(s.name)}</span></div>
+    <div class="detail-item"><b>⭐ คะแนน:</b> <span>${s.stars}/6 (${Math.round(s.stars/6*100)}%)</span></div>
+    <div class="detail-item"><b>⏱️ เวลาที่ใช้:</b> <span>${s.timeSpent || '-'} วินาที</span></div>
+    <div class="detail-item"><b>📅 วันที่:</b> <span>${new Date(s.timestamp).toLocaleString('th-TH')}</span></div>
+    <div style="margin-top:15px;"><b>📋 ผลการทำแต่ละด่าน:</b></div>
+  `;
+  s.details.forEach((d, i) => {
+    detailHTML += `<div class="detail-item"><span>${d.correct ? '✅' : '❌'} ${d.menu}</span><span style="color:${d.correct ? '#10b981' : '#ef4444'}; font-weight:bold;">${d.correct ? 'ผ่าน' : 'ไม่ผ่าน'}</span></div>`;
+  });
+  document.getElementById('detailTitle').innerHTML = `📊 รายละเอียด: ${s.avatar} ${escapeHtml(s.name)}`;
+  document.getElementById('detailBody').innerHTML = detailHTML;
+  document.getElementById('detailModal').classList.add('show');
+}
+function closeDetail() { document.getElementById('detailModal').classList.remove('show'); }
+function exportCSV() {
+  const scores = getScores();
+  if (scores.length === 0) { alert('ยังไม่มีข้อมูลให้ export'); return; }
+  let csv = 'ลำดับ,ชื่อ-สกุล,Avatar,คะแนน (ดาว),คะแนน (%),เวลา (วินาที),วันที่,';
+  for (let i = 1; i <= 6; i++) csv += `ด่าน${i},`;
+  csv = csv.slice(0, -1) + '\n';
+  scores.forEach((s, idx) => {
+    const date = new Date(s.timestamp).toLocaleString('th-TH');
+    let row = `${idx+1},"${s.name.replace(/"/g, '""')}",${s.avatar},${s.stars},${Math.round(s.stars/6*100)},${s.timeSpent || ''},"${date}",`;
+    s.details.forEach(d => row += (d.correct ? 'ผ่าน' : 'ไม่ผ่าน') + ',');
+    row = row.slice(0, -1) + '\n';
+    csv += row;
+  });
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `MoleCha_Lab_Scores_${new Date().toISOString().slice(0,10)}.csv`;
+  link.click();
+  alert('✅ Export CSV เรียบร้อยแล้ว');
+}
+function escapeHtml(str) { const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
+function createFloatingBg() {
+  const emojis = ['🧪', '⚗️', '🔬', '🧋', '🍵', '🧁', '🍰', '🍩', '🧃', '🍦', '⭐', '✨', '🌸', '🍓', '🧂'];
+  const bg = document.getElementById('floatingBg');
+  for (let i = 0; i < 22; i++) {
+    const f = document.createElement('div');
+    f.className = 'floater';
+    f.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    f.style.left = Math.random() * 100 + '%';
+    f.style.top = Math.random() * 100 + '%';
+    f.style.animationDelay = (Math.random() * 4) + 's';
+    f.style.animationDuration = (3 + Math.random() * 3) + 's';
+    f.style.animation = Math.random() > 0.5 ? 'floatBob 4s ease-in-out infinite' : 'floatBob2 5s ease-in-out infinite';
+    f.style.fontSize = (1.5 + Math.random() * 2) + 'em';
+    bg.appendChild(f);
+  }
+}
+createFloatingBg();
+function initAudio() { if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } }
+function playTone(freq, duration, type = 'sine', volume = 0.1) {
+  if (!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + duration);
+}
+function playClick() { playTone(800, 0.05, 'square', 0.05); }
+function playSuccess() { const notes = [523, 659, 784, 1047]; notes.forEach((n, i) => setTimeout(() => playTone(n, 0.15, 'sine', 0.15), i * 80)); }
+function playFail() { const notes = [400, 300, 200]; notes.forEach((n, i) => setTimeout(() => playTone(n, 0.2, 'sawtooth', 0.1), i * 100)); }
+function playStar() { playTone(1200, 0.1, 'sine', 0.15); setTimeout(() => playTone(1600, 0.15, 'sine', 0.15), 100); }
+const melody = [
+  { f: 523, d: 0.3 }, { f: 587, d: 0.3 }, { f: 659, d: 0.3 }, { f: 523, d: 0.3 },
+  { f: 659, d: 0.3 }, { f: 698, d: 0.3 }, { f: 784, d: 0.6 },
+  { f: 784, d: 0.2 }, { f: 880, d: 0.2 }, { f: 784, d: 0.2 }, { f: 698, d: 0.2 },
+  { f: 659, d: 0.3 }, { f: 523, d: 0.3 },
+  { f: 587, d: 0.3 }, { f: 392, d: 0.3 }, { f: 523, d: 0.6 }
+];
+function playMelody() {
+  if (!audioCtx || !musicPlaying) return;
+  let time = 0;
+  melody.forEach(note => {
+    setTimeout(() => { if (musicPlaying) playTone(note.f, note.d * 0.9, 'sine', 0.04); }, time * 1000);
+    time += note.d;
+  });
+  const totalDuration = melody.reduce((s, n) => s + n.d, 0);
+  musicInterval = setTimeout(playMelody, totalDuration * 1000);
+}
+function toggleMusic() {
+  initAudio();
+  musicPlaying = !musicPlaying;
+  const btn = document.getElementById('musicToggle');
+  if (musicPlaying) { btn.textContent = '🎵'; btn.classList.add('playing'); playMelody(); }
+  else { btn.textContent = '🔇'; btn.classList.remove('playing'); if (musicInterval) clearTimeout(musicInterval); }
+}
+let canvas, ctx;
+let isDrawing = false;
+let currentColor = '#000000';
+let currentSize = 5;
+let lastX = 0, lastY = 0;
+let canvasReady = false;
+function resizeCanvas() {
+  if (!canvas || !ctx) return;
+  const rect = canvas.getBoundingClientRect();
+  if (rect.width === 0 || rect.height === 0) return;
+  canvas.width = rect.width;
+  canvas.height = rect.height;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = currentColor;
+  ctx.lineWidth = currentSize;
+}
+function initCanvas() {
+  if (canvasReady) return;
+  canvas = document.getElementById('scratchCanvas');
+  if (!canvas) return;
+  ctx = canvas.getContext('2d');
+  canvasReady = true;
+  canvas.addEventListener('mousedown', function(e) {
+    e.preventDefault();
+    const pos = getCanvasPos(e);
+    isDrawing = true;
+    lastX = pos.x;
+    lastY = pos.y;
+  });
+  canvas.addEventListener('mousemove', function(e) {
+    if (!isDrawing) return;
+    e.preventDefault();
+    const pos = getCanvasPos(e);
+    drawLine(lastX, lastY, pos.x, pos.y);
+    lastX = pos.x;
+    lastY = pos.y;
+  });
+  canvas.addEventListener('mouseup', function(e) { isDrawing = false; e.preventDefault(); });
+  canvas.addEventListener('mouseout', function(e) { isDrawing = false; });
+  canvas.addEventListener('mouseleave', function(e) { isDrawing = false; });
+  canvas.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    if (e.touches.length === 0) return;
+    const pos = getCanvasPosFromTouch(e.touches[0]);
+    isDrawing = true;
+    lastX = pos.x;
+    lastY = pos.y;
+  }, { passive: false });
+  canvas.addEventListener('touchmove', function(e) {
+    e.preventDefault();
+    if (!isDrawing || e.touches.length === 0) return;
+    const pos = getCanvasPosFromTouch(e.touches[0]);
+    drawLine(lastX, lastY, pos.x, pos.y);
+    lastX = pos.x;
+    lastY = pos.y;
+  }, { passive: false });
+  canvas.addEventListener('touchend', function(e) { isDrawing = false; });
+  canvas.addEventListener('touchcancel', function(e) { isDrawing = false; });
+}
+function getCanvasPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+}
+function getCanvasPosFromTouch(touch) {
+  const rect = canvas.getBoundingClientRect();
+  return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
+}
+function drawLine(x1, y1, x2, y2) {
+  if (!ctx) return;
+  ctx.strokeStyle = currentColor;
+  ctx.lineWidth = currentSize;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+}
+function clearCanvas() {
+  if (!ctx || !canvas) return;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  playClick();
+}
+function setPenColor(color) {
+  currentColor = color;
+  document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+  const colorMap = { '#000000': 'colorBlack', '#ef4444': 'colorRed', '#3b82f6': 'colorBlue', '#10b981': 'colorGreen' };
+  const btn = document.getElementById(colorMap[color]);
+  if (btn) btn.classList.add('active');
+  if (ctx) { ctx.strokeStyle = currentColor; }
+  playClick();
+}
+function setPenSize(size) {
+  currentSize = size;
+  document.querySelectorAll('#sizeSmall, #sizeMedium, #sizeLarge').forEach(b => b.classList.remove('active'));
+  const sizeMap = { 2: 'sizeSmall', 5: 'sizeMedium', 10: 'sizeLarge' };
+  const btn = document.getElementById(sizeMap[size]);
+  if (btn) btn.classList.add('active');
+  if (ctx) { ctx.lineWidth = currentSize; }
+  playClick();
+}
+function toggleScratch() {
+  const pad = document.getElementById('scratchPad');
+  const isOpen = pad.classList.contains('open');
+  if (isOpen) { pad.classList.remove('open'); }
+  else {
+    pad.classList.add('open');
+    setTimeout(() => { initCanvas(); resizeCanvas(); }, 50);
+  }
+  playClick();
+}
+document.querySelectorAll('.avatar').forEach(a => {
+  a.addEventListener('click', () => {
+    document.querySelectorAll('.avatar').forEach(x => x.classList.remove('selected'));
+    a.classList.add('selected');
+    playerAvatar = a.dataset.avatar;
+    playClick();
+  });
+});
+function confirmRegister() {
+  const name = document.getElementById('playerName').value.trim();
+  if (!name) { alert('กรุณาใส่ชื่อ-สกุล / เลขที่ 🙏'); return; }
+  initAudio();
+  playerName = name;
+  document.getElementById('playerNameDisplay').textContent = `${playerAvatar} ${playerName}`;
+  document.getElementById('playerBadge').style.display = 'block';
+  gameStartTime = Date.now();
+  playSuccess();
+  showStory(0);
+}
+function showStory(idx) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('storyScreen').classList.add('active');
+  document.getElementById('starBar').style.display = idx === 0 ? 'none' : 'flex';
+  const s = stories[idx];
+  document.getElementById('storyScene').textContent = s.scene;
+  document.getElementById('storyTitle').textContent = s.title;
+  document.getElementById('storySpeaker').textContent = s.speaker;
+  document.getElementById('storyContent').innerHTML = s.content;
+}
+function startMission() {
+  playClick();
+  document.getElementById('storyScreen').classList.remove('active');
+  document.getElementById('questionScreen').classList.add('active');
+  document.getElementById('starBar').style.display = 'flex';
+  loadQuestion();
+}
+function loadQuestion() {
+  answered = false;
+  const q = questions[currentQuestion];
+  document.getElementById('menuTitle').innerHTML = `${q.menu} <span class="menu-type">${q.typeLabel}</span>`;
+  document.getElementById('menuGoal').innerHTML = q.goal;
+  document.getElementById('questionText').innerHTML = q.question;
+  document.getElementById('feedbackBox').classList.remove('show', 'correct', 'wrong');
+  document.getElementById('menuProgress').textContent = `ด่าน ${currentQuestion + 1}/6`;
+  document.getElementById('progressFill').style.width = `${(currentQuestion / 6) * 100}%`;
+  const gameArea = document.getElementById('gameArea');
+  gameArea.innerHTML = '';
+  if (q.type === 'slider') renderSliderGame(q, gameArea);
+  else if (q.type === 'crafting') renderCraftingGame(q, gameArea);
+  else if (q.type === 'sorting') renderSortingGame(q, gameArea);
+  else if (q.type === 'password') renderPasswordGame(q, gameArea);
+}
+function renderSliderGame(q, container) {
+  container.innerHTML = `
+    <div class="slider-game">
+      <div style="color:#8b5a3c; margin-bottom:10px; font-weight:bold;">🔬 ตาชั่งดิจิทัล Lab-Grade</div>
+      <div class="scale-display"><span id="scaleValue">0.0</span> <small>${q.unit}</small></div>
+      <div class="slider-container">
+        <input type="range" class="slider" id="weightSlider" min="${q.min}" max="${q.max}" step="${q.step}" value="${q.min}">
+        <div class="slider-hint"><span>${q.min} ${q.unit}</span><span>${q.max} ${q.unit}</span></div>
+      </div>
+      <button class="btn" onclick="submitSlider()">⚗️ เทสารลงถังทดลอง</button>
+    </div>
+  `;
+  const slider = document.getElementById('weightSlider');
+  const display = document.getElementById('scaleValue');
+  slider.addEventListener('input', () => {
+    display.textContent = parseFloat(slider.value).toFixed(1);
+    playTone(300 + parseFloat(slider.value) * 5, 0.03, 'sine', 0.03);
+  });
+}
+function submitSlider() {
+  if (answered) return;
+  answered = true;
+  playClick();
+  const q = questions[currentQuestion];
+  const value = parseFloat(document.getElementById('weightSlider').value);
+  const isCorrect = Math.abs(value - q.target) < 0.1;
+  handleResult(isCorrect, isCorrect ? q.correctMsg : (value > q.target ? q.tooHigh : q.tooLow), q.solution);
+}
+let craftState = { C: 0, H: 0, O: 0 };
+function renderCraftingGame(q, container) {
+  craftState = { C: 0, H: 0, O: 0 };
+  const atoms = [
+    { sym: 'C', name: 'คาร์บอน', color: 'C' },
+    { sym: 'H', name: 'ไฮโดรเจน', color: 'H' },
+    { sym: 'O', name: 'ออกซิเจน', color: 'O' }
+  ];
+  let tanksHTML = atoms.map(a => `
+    <div class="atom-tank ${a.color}">
+      <div class="atom-symbol">${a.sym}</div>
+      <div style="font-size:0.85em; color:#8b5a3c;">${a.name}</div>
+      <div class="atom-count" id="count-${a.sym}">0</div>
+      <div class="atom-controls">
+        <button class="atom-btn minus" onclick="changeAtom('${a.sym}', -1)">−</button>
+        <button class="atom-btn plus" onclick="changeAtom('${a.sym}', 1)">+</button>
+      </div>
+    </div>
+  `).join('');
+  container.innerHTML = `
+    <div class="crafting-game">
+      <div style="text-align:center; color:#c026d3; margin-bottom:10px; font-weight:bold;">🧪 เครื่องคราฟต์โมเลกุล</div>
+      <div class="crafting-area">${tanksHTML}</div>
+      <div class="formula-display" id="formulaDisplay">—</div>
+      <div style="text-align:center; color:#8b5a3c; margin-bottom:10px; font-weight:bold;" id="weightDisplay">น้ำหนักรวม: 0.0 กรัม (ของ 1 โมเลกุล)</div>
+      <button class="btn" onclick="submitCrafting()">⚗️ เริ่มปฏิกิริยา</button>
+    </div>
+  `;
+  updateFormula();
+}
+function changeAtom(sym, delta) {
+  if (answered) return;
+  craftState[sym] = Math.max(0, craftState[sym] + delta);
+  document.getElementById(`count-${sym}`).textContent = craftState[sym];
+  playTone(400 + craftState[sym] * 50, 0.08, 'sine', 0.08);
+  updateFormula();
+}
+function updateFormula() {
+  const parts = [];
+  if (craftState.C > 0) parts.push(`C${craftState.C > 1 ? '<sub>' + craftState.C + '</sub>' : ''}`);
+  if (craftState.H > 0) parts.push(`H${craftState.H > 1 ? '<sub>' + craftState.H + '</sub>' : ''}`);
+  if (craftState.O > 0) parts.push(`O${craftState.O > 1 ? '<sub>' + craftState.O + '</sub>' : ''}`);
+  document.getElementById('formulaDisplay').innerHTML = parts.length ? parts.join('') : '—';
+  const mass = (craftState.C * 12) + (craftState.H * 1) + (craftState.O * 16);
+  document.getElementById('weightDisplay').textContent = `น้ำหนักรวม: ${mass.toFixed(1)} กรัม (ของ 1 โมเลกุล)`;
+}
+function submitCrafting() {
+  if (answered) return;
+  answered = true;
+  playClick();
+  const q = questions[currentQuestion];
+  const isCorrect = craftState.C === q.targetFormula.C && craftState.H === q.targetFormula.H && craftState.O === q.targetFormula.O;
+  handleResult(isCorrect, isCorrect ? q.correctMsg : q.tooLow, q.solution);
+}
+let selectedBox = null;
+function renderSortingGame(q, container) {
+  selectedBox = null;
+  let boxesHTML = q.boxes.map((b, i) => `
+    <div class="box" id="box-${i}" onclick="selectBox(${i})">
+      <div class="box-label">${b.label}</div>
+      <div class="box-info">${b.info}</div>
+    </div>
+  `).join('');
+  container.innerHTML = `
+    <div class="sorting-game">
+      <div style="text-align:center; color:#92400e; margin-bottom:10px; font-weight:bold;">📦 สายพานลำเลียงวัตถุดิบ</div>
+      <div class="conveyor">${boxesHTML}</div>
+      <div class="drop-zone" id="dropZone">👆 คลิกเลือกกล่องที่ถูกต้อง → วางในชั้นรับของ</div>
+      <button class="btn" onclick="submitSorting()">📥 วางลงชั้นรับของ</button>
+    </div>
+  `;
+}
+function selectBox(idx) {
+  if (answered) return;
+  document.querySelectorAll('.box').forEach(b => b.classList.remove('selected'));
+  document.getElementById(`box-${idx}`).classList.add('selected');
+  selectedBox = idx;
+  document.getElementById('dropZone').innerHTML = `📦 เลือก: <b>${questions[currentQuestion].boxes[idx].label}</b>`;
+  playClick();
+}
+function submitSorting() {
+  if (answered || selectedBox === null) { if (selectedBox === null) alert('กรุณาเลือกกล่องก่อน 🙏'); return; }
+  answered = true;
+  playClick();
+  const q = questions[currentQuestion];
+  const isCorrect = q.boxes[selectedBox].correct;
+  document.querySelectorAll('.box').forEach((b, i) => {
+    if (q.boxes[i].correct) b.classList.add('correct-box');
+    else if (i === selectedBox) b.classList.add('wrong-box');
+  });
+  handleResult(isCorrect, isCorrect ? q.correctMsg : q.wrongMsg, q.solution);
+}
+let passwordInput = '';
+function renderPasswordGame(q, container) {
+  passwordInput = '';
+  container.innerHTML = `
+    <div class="password-game">
+      <div style="color:#dc2626; font-weight:bold; margin-top:20px;">🔒 ตู้เซฟระบบล้างตะกรัน</div>
+      <div class="safe-display" id="safeDisplay">_</div>
+      <div style="color:#991b1b; margin-bottom:15px; font-size:0.9em;">ป้อนค่า x (เลขจำนวนเต็ม 1 หลัก)</div>
+      <div class="keypad">
+        <button class="key" onclick="pressKey('1')">1</button>
+        <button class="key" onclick="pressKey('2')">2</button>
+        <button class="key" onclick="pressKey('3')">3</button>
+        <button class="key" onclick="pressKey('4')">4</button>
+        <button class="key" onclick="pressKey('5')">5</button>
+        <button class="key" onclick="pressKey('6')">6</button>
+        <button class="key" onclick="pressKey('7')">7</button>
+        <button class="key" onclick="pressKey('8')">8</button>
+        <button class="key" onclick="pressKey('9')">9</button>
+        <button class="key action" onclick="clearKey()">CLR</button>
+        <button class="key" onclick="pressKey('0')">0</button>
+        <button class="key enter" onclick="submitPassword()">✓ ENTER</button>
+      </div>
+    </div>
+  `;
+}
+function pressKey(num) {
+  if (answered) return;
+  if (passwordInput.length < 3) {
+    passwordInput += num;
+    document.getElementById('safeDisplay').textContent = passwordInput;
+    playTone(600 + parseInt(num) * 50, 0.08, 'square', 0.08);
+  }
+}
+function clearKey() {
+  if (answered) return;
+  passwordInput = '';
+  document.getElementById('safeDisplay').textContent = '_';
+  playClick();
+}
+function submitPassword() {
+  if (answered || passwordInput === '') { if (passwordInput === '') alert('กรุณาป้อนรหัส 🙏'); return; }
+  answered = true;
+  playClick();
+  const q = questions[currentQuestion];
+  const isCorrect = passwordInput === q.targetAnswer;
+  handleResult(isCorrect, isCorrect ? q.correctMsg : q.wrongMsg, q.solution);
+}
+function handleResult(isCorrect, message, solution) {
+  if (isCorrect) { stars++; playSuccess(); setTimeout(playStar, 400); }
+  else { playFail(); }
+  results.push({ menu: questions[currentQuestion].menu, correct: isCorrect });
+  document.getElementById('starCount').textContent = stars;
+  const feedbackBox = document.getElementById('feedbackBox');
+  feedbackBox.classList.add('show', isCorrect ? 'correct' : 'wrong');
+  document.getElementById('feedbackTitle').innerHTML = isCorrect ? '✅ ภารกิจสำเร็จ!' : '❌ ภารกิจล้มเหลว!';
+  document.getElementById('feedbackMessage').innerHTML = message;
+  document.getElementById('feedbackSolution').innerHTML = solution;
+  const nextBtn = document.getElementById('nextBtn');
+  if (currentQuestion >= questions.length - 1) { nextBtn.textContent = '🏆 ดูสรุปผล'; }
+  else { nextBtn.textContent = '📖 เรื่องราวถัดไป ➡️'; }
+}
+function nextQuestion() {
+  playClick();
+  currentQuestion++;
+  if (currentQuestion >= questions.length) { showResult(); }
+  else { showStory(currentQuestion + 1); }
+}
+
+// ===== ส่งข้อมูลไป Google Sheets =====
+function sendToGoogleSheet(data) {
+  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('placeholder')) {
+    console.log('ยังไม่ได้ตั้งค่า GOOGLE_SCRIPT_URL');
+    return;
+  }
+  
+  fetch(GOOGLE_SCRIPT_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  })
+  .then(() => {
+    console.log('✅ ส่งข้อมูลไป Google Sheets สำเร็จ');
+  })
+  .catch(err => {
+    console.error('❌ ส่งข้อมูลไม่สำเร็จ:', err);
+  });
+}
+
+function showResult() {
+  document.getElementById('questionScreen').classList.remove('active');
+  document.getElementById('resultScreen').classList.add('active');
+  document.getElementById('progressFill').style.width = '100%';
+  const timeSpent = Math.round((Date.now() - gameStartTime) / 1000);
+  const scoreData = {
+    name: playerName,
+    avatar: playerAvatar,
+    stars: stars,
+    timeSpent: timeSpent,
+    timestamp: new Date().toISOString(),
+    details: results.map((r, i) => ({ menu: questions[i].menu, correct: r.correct }))
+  };
+  saveScore(scoreData);
+  
+  // ส่งข้อมูลไป Google Sheets
+  sendToGoogleSheet(scoreData);
+  
+  let icon, title, message;
+  if (stars === 6) { icon = '🏆🧪'; title = `${playerAvatar} ${playerName} ยอดเยี่ยม!`; message = 'Mole-Cha Lab ประสบความสำเร็จสูงสุด! คุณคือนักทดลองอัจฉริยะ ลูกค้ารีวิว 5 ดาวถล่มทลาย กำไรมหาศาล พร้อมขยายสาขา!'; }
+  else if (stars >= 4) { icon = '🧪✨'; title = `${playerAvatar} ${playerName} ผ่านเกณฑ์!`; message = 'ห้องทดลองเปิดได้เรื่อยๆ ผ่านเกณฑ์มาตรฐาน แต่ต้องระวังของพังและรสชาติเพี้ยนในบางเมนู ทบทวนเรื่องโมลอีกนิดจะเก่งขึ้น!'; }
+  else { icon = '💥🚫'; title = `${playerAvatar} ${playerName} ห้องทดลองระเบิด!`; message = 'เกิดอุบัติเหตุสารเคมีเกินเกณฑ์ ห้องทดลองโดนสั่งปิดชั่วคราว! ลองทบทวนเรื่องโมลใหม่ แล้วกลับมาท้าทายอีกครั้ง!'; }
+  document.getElementById('resultIcon').innerHTML = icon;
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('resultStars').textContent = '⭐'.repeat(stars) + '☆'.repeat(6 - stars);
+  document.getElementById('resultMessage').innerHTML = message;
+  let summary = `<b>📊 สรุปผลการทดลองของ ${playerAvatar} ${playerName}:</b><br>`;
+  results.forEach(r => { summary += `<div>${r.correct ? '✅' : '❌'} ${r.menu}</div>`; });
+  summary += `<div style="margin-top:10px; color:#c026d3; font-weight:bold;"><b>🎯 คะแนนรวม: ${stars}/6 ดาว</b></div>`;
+  summary += `<div style="color:#8b5a3c;"><b>⏱️ เวลาที่ใช้: ${timeSpent} วินาที</b></div>`;
+  summary += `<div style="color:#10b981; margin-top:10px;"><b>📤 ส่งข้อมูลไป Google Sheets แล้ว ✅</b></div>`;
+  document.getElementById('resultSummary').innerHTML = summary;
+  if (stars === 6) { playSuccess(); setTimeout(playSuccess, 500); }
+}
+function restartGame() {
+  currentQuestion = 0; stars = 0; results = [];
+  document.getElementById('starCount').textContent = '0';
+  document.getElementById('progressFill').style.width = '0%';
+  document.getElementById('resultScreen').classList.remove('active');
+  document.getElementById('registerScreen').classList.add('active');
+  document.getElementById('starBar').style.display = 'none';
+  document.getElementById('playerBadge').style.display = 'none';
+  document.getElementById('playerName').value = '';
+  playClick();
+}
+document.addEventListener('click', function initFirst() {
+  initAudio();
+  if (!musicPlaying) {
+    musicPlaying = true;
+    document.getElementById('musicToggle').classList.add('playing');
+    playMelody();
+  }
+  document.removeEventListener('click', initFirst);
+}, { once: true });
+</script>
+</body>
+</html>
